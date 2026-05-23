@@ -129,10 +129,10 @@ function showPublishProduct() { showPage('publish-product') }
 function addProductImage(input) {
   var file = input.files[0]; if (!file) return
   document.getElementById('product-images-preview').innerHTML = '<div class="img-item" style="display:flex;align-items:center;justify-content:center;color:#999">⏳</div>'
-  var path = 'images/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + (file.name.split('.').pop() || 'jpg')
+  var path = Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + (file.name.split('.').pop() || 'jpg')
   sb.storage.from('images').upload(path, file).then(function(res){
     if (res.error) { alert('上传失败: ' + res.error.message); input.value = ''; return }
-    var url = SUPABASE_URL + '/storage/v1/object/public/' + path
+    var url = SUPABASE_URL + '/storage/v1/object/public/images/' + path
     productImages.push(url)
     renderProductImages()
     input.value = ''
