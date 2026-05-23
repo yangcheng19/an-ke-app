@@ -288,10 +288,16 @@ function loadMy() {
   document.getElementById('my-empty').innerHTML = '<div class="empty-tip"><span class="empty-icon">⏳</span>加载中...</div>'
   document.getElementById('my-products').innerHTML = ''
   document.getElementById('my-articles').innerHTML = ''
-  var myId = uid()
-  Promise.all([
-    sb.from('products').select('*').eq('author_id', myId).order('created_at', { ascending: false }).limit(50),
-    sb.from('articles').select('*').eq('author_id', myId).order('created_at', { ascending: false }).limit(50)
+  var myId
+  try { myId = uid() } catch(e) { document.getElementById('my-empty').innerHTML = '<div class="empty-tip"><span class="empty-icon">⚠</span>浏览器不支持，请关闭无痕模式</div>'; return }
+
+  var timeout = new Promise(function(_, reject) { setTimeout(function(){ reject(new Error('timeout')) }, 8000) })
+  Promise.race([
+    Promise.all([
+      sb.from('products').select('*').eq('author_id', myId).order('created_at', { ascending: false }).limit(50),
+      sb.from('articles').select('*').eq('author_id', myId).order('created_at', { ascending: false }).limit(50)
+    ]),
+    timeout
   ]).then(function(results){
     var myProducts = results[0].data || []
     var myArticles = results[1].data || []
