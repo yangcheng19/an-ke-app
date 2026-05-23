@@ -2,30 +2,27 @@ var SUPABASE_URL = 'https://hwxskrvzyzklqhtbljjj.supabase.co'
 var SUPABASE_KEY = 'sb_publishable_Z532VBTIfq0yBj4K3f26-g_S81ro8kz'
 var H = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
 
-async function supabase(path, opts) {
+async function sb(path, opts) {
   var url = SUPABASE_URL + '/rest/v1/' + path
   var res = await fetch(url, Object.assign({ headers: H }, opts || {}))
-  return { data: await res.json(), status: res.status }
+  return res.json()
 }
 
-module.exports = async function(req) {
-  var url = new URL(req.url)
-  var method = req.method
+module.exports = async function(req, res) {
   try {
-    if (method === 'GET') {
-      var tt = url.searchParams.get('target_type')
-      var ti = url.searchParams.get('target_id')
+    if (req.method === 'GET') {
+      var tt = req.query.target_type
+      var ti = req.query.target_id
       var path = 'comments?select=*&target_type=eq.' + encodeURIComponent(tt) + '&target_id=eq.' + encodeURIComponent(ti) + '&order=created_at.desc&limit=50'
-      var result = await supabase(path, { method: 'GET' })
-      return new Response(JSON.stringify(result.data), { status: 200, headers: H })
+      var data = await sb(path)
+      return res.json(data)
     }
-    if (method === 'POST') {
-      var body = await req.json()
-      var result = await supabase('comments', { method: 'POST', body: JSON.stringify(body) })
-      return new Response(JSON.stringify(result.data), { status: 200, headers: H })
+    if (req.method === 'POST') {
+      var data = await sb('comments', { method: 'POST', body: JSON.stringify(req.body) })
+      return res.json(data)
     }
-    return new Response('{}', { status: 405, headers: H })
+    res.status(405).json({})
   } catch(e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: H })
+    res.status(500).json({ error: e.message })
   }
 }
