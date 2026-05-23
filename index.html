@@ -187,7 +187,7 @@ function sb(u, o){ o=o||{}; o.headers=Object.assign({},SH,o.headers||{}); return
 function $(id){ return document.getElementById(id) }
 function esc(s){ if(!s)return''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
 function fmt(s){ if(!s)return''; var d=new Date(s),n=Date.now(),x=n-d; if(x<6e4)return'刚刚'; if(x<36e5)return Math.floor(x/6e4)+'分钟前'; if(x<864e5)return Math.floor(x/36e5)+'小时前'; if(x<2592e6)return Math.floor(x/864e5)+'天前'; return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate() }
-function uid(){ var id=localStorage.getItem('au'); if(!id) return null; return id }
+function uid(){ var id=localStorage.getItem('au'); if(!id||id.indexOf('ak_')!==0) return null; return id }
 function usr(){ return JSON.parse(localStorage.getItem('ausr')||'{}') }
 function needLogin(){ return !uid() }
 function doLogin(phrase){
