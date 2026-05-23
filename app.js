@@ -294,15 +294,19 @@ function setNickname() {
 
 function setAvatar() {
   var input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'
-  input.onchange = function() {
+  input.style.display = 'none'; document.body.appendChild(input)
+  input.addEventListener('change', function() {
+    if (!this.files || !this.files[0]) return
     var reader = new FileReader()
     reader.onload = function(e) {
       var user = JSON.parse(localStorage.getItem('ak_user') || '{}'); user.avatarUrl = e.target.result
       localStorage.setItem('ak_user', JSON.stringify(user)); loadMy()
+      document.body.removeChild(input)
     }
-    reader.readAsDataURL(input.files[0])
-  }
-  input.click()
+    reader.readAsDataURL(this.files[0])
+  })
+  // 延迟触发，避免移动端拦截
+  setTimeout(function(){ input.click() }, 100)
 }
 
 // ========== 狐狸 ==========
