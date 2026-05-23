@@ -233,7 +233,7 @@ function loadMy() {
     var myProducts = results[0].data || []
     var myArticles = results[1].data || []
     var user = JSON.parse(localStorage.getItem('ak_user')||'{}')
-    document.getElementById('my-avatar').src = user.avatarUrl || ''
+    var avatarImg = document.getElementById('my-avatar'); if(avatarImg) avatarImg.src = user.avatarUrl || ''
     document.getElementById('my-name').innerText = user.nickName || '点击设置昵称'
 
     var pHtml = ''
