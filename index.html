@@ -180,7 +180,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <div class="fbb" id="fob"></div>
 
 <script>
-var API = '/api'
+var SB = 'https://hwxskrvzyzklqhtbljjj.supabase.co/rest/v1'
+var SK = 'sb_publishable_Z532VBTIfq0yBj4K3f26-g_S81ro8kz'
+var SH = { 'Content-Type':'application/json', apikey:SK, Authorization:'Bearer '+SK }
+function sb(u, o){ o=o||{}; o.headers=Object.assign({},SH,o.headers||{}); return fetch(SB+u, o) }
 function $(id){ return document.getElementById(id) }
 function esc(s){ if(!s)return''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
 function fmt(s){ if(!s)return''; var d=new Date(s),n=Date.now(),x=n-d; if(x<6e4)return'刚刚'; if(x<36e5)return Math.floor(x/6e4)+'分钟前'; if(x<864e5)return Math.floor(x/36e5)+'小时前'; if(x<2592e6)return Math.floor(x/864e5)+'天前'; return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate() }
@@ -225,7 +228,7 @@ function ldP(){
   var n=Date.now(); if(pc&&n-pc.t<30000){ rP(pc.d); return }
   var q='/products?select=id,title,price,category,images,status,created_at,view_count&status=eq.active&order=created_at.desc&limit=12'
   if(hc!=='全部') q+='&category=eq.'+encodeURIComponent(hc)
-  fetch(API+q).then(function(r){ return r.json() }).then(function(d){ pc={d:d,t:n}; rP(d) }).catch(function(){ $('list').innerHTML='<div class="empt"><span class="eic">📡</span>加载失败，下拉刷新重试</div>' })
+  sb(q).then(function(r){ return r.json() }).then(function(d){ pc={d:d,t:n}; rP(d) }).catch(function(){ $('list').innerHTML='<div class="empt"><span class="eic">📡</span>加载失败，下拉刷新重试</div>' })
 }
 function rP(list){
   if(!list.length){ $('list').innerHTML='<div class="empt"><span class="eic">📦</span>还没有物品</div>'; return }
@@ -242,7 +245,7 @@ function ldA(){
   var n=Date.now(); if(ac&&n-ac.t<30000){ rA(ac.d); return }
   var q='/articles?select=id,title,content,category,created_at,view_count&order=created_at.desc&limit=12'
   if(hac!=='全部') q+='&category=eq.'+encodeURIComponent(hac)
-  fetch(API+q).then(function(r){ return r.json() }).then(function(d){ ac={d:d,t:n}; rA(d) }).catch(function(){ $('list').innerHTML='<div class="empt"><span class="eic">📡</span>加载失败，下拉刷新重试</div>' })
+  sb(q).then(function(r){ return r.json() }).then(function(d){ ac={d:d,t:n}; rA(d) }).catch(function(){ $('list').innerHTML='<div class="empt"><span class="eic">📡</span>加载失败，下拉刷新重试</div>' })
 }
 function rA(list){
   if(!list.length){ $('list').innerHTML='<div class="empt"><span class="eic">📝</span>还没有文案</div>'; return }
@@ -276,7 +279,7 @@ function pubP(){
   if(isNaN(pr)||pr<=0) return alert('请输入正确的价值')
   if(!wx) return alert('请输入微信号')
   var u=usr()
-  fetch(API+'/products',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:tl,description:ds,price:pr,category:ca,images:pimg,contact_wechat:wx,seller_name:u.nickName||'微信用户',author_id:uid(),status:'active',view_count:0})})
+  sb('products',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:tl,description:ds,price:pr,category:ca,images:pimg,contact_wechat:wx,seller_name:u.nickName||'微信用户',author_id:uid(),status:'active',view_count:0})})
     .then(function(r){ return r.json() }).then(function(){
       alert('分享成功！'); pimg=[]; rImgs()
       $('f-ptl').value=$('f-pds').value=$('f-ppr').value=$('f-pwx').value=''
@@ -289,7 +292,7 @@ function pubA(){
   var tl=$('f-atl').value.trim(), ct=$('f-act').value.trim(), ca=$('f-aca').value
   if(!tl) return alert('请输入标题'); if(!ct) return alert('请输入内容')
   var u=usr()
-  fetch(API+'/articles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:tl,content:ct,category:ca,author_name:u.nickName||'微信用户',author_id:uid()})})
+  sb('articles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:tl,content:ct,category:ca,author_name:u.nickName||'微信用户',author_id:uid()})})
     .then(function(r){ return r.json() }).then(function(){
       alert('分享成功！'); $('f-atl').value=$('f-act').value=''; ac=null; nav('home'); sMode('a')
     }).catch(function(e){ alert('发布失败: '+e.message) })
@@ -297,9 +300,9 @@ function pubA(){
 
 // ===== 物品详情 =====
 function vP(id){
-  fetch(API+'/products?select=*&id=eq.'+id).then(function(r){ return r.json() }).then(function(d){
+  sb('products?select=*&id=eq.'+id).then(function(r){ return r.json() }).then(function(d){
     var p=d&&d[0]; if(!p) return
-    fetch(API+'/products?id='+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({view_count:(p.view_count||0)+1})})
+    sb('products?id='+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({view_count:(p.view_count||0)+1})})
     var im=typeof p.images==='string'?JSON.parse(p.images||'[]'):(p.images||[])
     var h=im.length?'<div class="dimg"><img src="'+im[0]+'"></div>':''
     h+='<div class="dinfo"><div class="dpr">'+(p.price||0)+'米粒</div><div class="dtl">'+esc(p.title)+'</div><div class="dmt">'+fmt(p.created_at)+' · '+(p.view_count||0)+'次浏览 · '+p.category+'</div></div>'
@@ -313,9 +316,9 @@ function sWx(w){ $('wxv').innerText=w||'未填写'; $('md-wx').classList.add('on
 
 // ===== 文案详情 =====
 function vA(id){
-  fetch(API+'/articles?select=*&id=eq.'+id).then(function(r){ return r.json() }).then(function(d){
+  sb('articles?select=*&id=eq.'+id).then(function(r){ return r.json() }).then(function(d){
     var a=d&&d[0]; if(!a) return
-    fetch(API+'/articles?id='+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({view_count:(a.view_count||0)+1})})
+    sb('articles?id='+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({view_count:(a.view_count||0)+1})})
     var h='<div class="apg"><div class="ahd"><span class="atag" style="background:#07c160;color:#fff">'+a.category+'</span><h1 class="ah1">'+esc(a.title)+'</h1><div class="atm">'+fmt(a.created_at)+' · '+(a.view_count||0)+'阅读</div></div>'
     h+='<div class="abd">'+esc(a.content)+'</div><div style="padding:16px"><button class="btn" style="background:#fff;color:#07c160;border:1px solid #07c160" onclick="opCm(\'article\','+a.id+')">💬 查看评论</button></div></div>'
     $('adc').innerHTML=h; nav('ad')
@@ -326,7 +329,7 @@ function vA(id){
 var ctg={t:'',id:0}
 function opCm(t,id){ ctg={t:t,id:id}; $('md-cm').classList.add('on'); ldCm() }
 function ldCm(){
-  fetch(API+'/comments?select=*&target_type=eq.'+ctg.t+'&target_id=eq.'+ctg.id+'&order=created_at.desc&limit=50').then(function(r){ return r.json() }).then(function(d){
+  sb('comments?select=*&target_type=eq.'+ctg.t+'&target_id=eq.'+ctg.id+'&order=created_at.desc&limit=50').then(function(r){ return r.json() }).then(function(d){
     var h=''; if(!d.length) h='<div style="text-align:center;padding:20px;color:#999">暂无评论，快来抢沙发</div>'
     else d.forEach(function(c){ h+='<div style="padding:10px 0;border-bottom:1px solid #f0f0f0"><div style="font-size:13px;color:#999;margin-bottom:4px">'+esc(c.author_name)+' · '+fmt(c.created_at)+'</div><div style="font-size:15px;color:#333">'+esc(c.content)+'</div></div>' })
     $('cml').innerHTML=h
@@ -335,7 +338,7 @@ function ldCm(){
 function pubC(){
   var v=$('cmin').value.trim(); if(!v) return alert('请输入评论内容')
   var u=usr()
-  fetch(API+'/comments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({target_type:ctg.t,target_id:ctg.id,author_name:u.nickName||'匿名用户',author_id:uid(),content:v})})
+  sb('comments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({target_type:ctg.t,target_id:ctg.id,author_name:u.nickName||'匿名用户',author_id:uid(),content:v})})
     .then(function(){ $('cmin').value=''; ldCm() }).catch(function(){ alert('评论失败') })
 }
 
@@ -347,8 +350,8 @@ function ldMy(){
   $('myna').innerText=u.nickName||'点击设置昵称'
 
   Promise.all([
-    fetch(API+'/products?select=*&author_id=eq.'+myId+'&order=created_at.desc&limit=50').then(function(r){ return r.json() }),
-    fetch(API+'/articles?select=*&author_id=eq.'+myId+'&order=created_at.desc&limit=50').then(function(r){ return r.json() })
+    sb('products?select=*&author_id=eq.'+myId+'&order=created_at.desc&limit=50').then(function(r){ return r.json() }),
+    sb('articles?select=*&author_id=eq.'+myId+'&order=created_at.desc&limit=50').then(function(r){ return r.json() })
   ]).then(function(r){
     var mp=r[0]||[], ma=r[1]||[], ph='', ah=''
     mp.forEach(function(p){
@@ -367,8 +370,8 @@ function ldMy(){
     $('my-em').innerHTML='<div class="empt"><span class="eic">📡</span>加载失败，下拉刷新重试</div>'
   })
 }
-function rmP(id){ if(!confirm('确认下架？')) return; fetch(API+'/products?id='+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'removed'})}).then(function(){ ldMy() }) }
-function rmA(id){ if(!confirm('确认删除？')) return; fetch(API+'/articles?id='+id,{method:'DELETE'}).then(function(){ ldMy() }) }
+function rmP(id){ if(!confirm('确认下架？')) return; sb('products?id='+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'removed'})}).then(function(){ ldMy() }) }
+function rmA(id){ if(!confirm('确认删除？')) return; sb('articles?id='+id,{method:'DELETE'}).then(function(){ ldMy() }) }
 function chgNi(){ var n=prompt('请输入昵称：'); if(!n) return; var u=usr(); u.nickName=n; localStorage.setItem('ausr',JSON.stringify(u)); ldMy() }
 function chgAv(){
   var inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.style.display='none'; document.body.appendChild(inp)
@@ -402,7 +405,7 @@ setInterval(sb,10000);setTimeout(sb,3000);up()
 function mv(cx,cy){fx.x=Math.max(0,Math.min(cx-ox,window.innerWidth-80));fx.y=Math.max(0,Math.min(cy-oy,window.innerHeight-120));up()}
 function up(){$('fox').style.left=fx.x+'px';$('fox').style.top=fx.y+'px'}
 function rn(){
-  Promise.all([fetch(API+'/products?select=id&status=eq.active&limit=50').then(function(r){return r.json()}),fetch(API+'/articles?select=id&limit=50').then(function(r){return r.json()})]).then(function(r){
+  Promise.all([sb('products?select=id&status=eq.active&limit=50').then(function(r){return r.json()}),sb('articles?select=id&limit=50').then(function(r){return r.json()})]).then(function(r){
     var it=[]
     ;(r[0]||[]).forEach(function(p){it.push({t:'p',id:p.id})})
     ;(r[1]||[]).forEach(function(a){it.push({t:'a',id:a.id})})
