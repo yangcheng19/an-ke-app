@@ -197,7 +197,9 @@ function viewProduct(id) {
     html += '<div class="detail-meta">' + fmt(p.created_at) + ' · ' + (p.view_count||0) + '次浏览 · ' + p.category + '</div></div>'
     html += '<div class="detail-seller"><img class="seller-avatar" src="' + (p.seller_avatar || '') + '"><div><div class="seller-name">' + esc(p.seller_name || '微信用户') + '</div><div class="seller-label">分享者</div></div></div>'
     html += '<div class="detail-desc">' + esc(p.description || '暂无描述') + '</div>'
-    html += '<div class="detail-bar"><button class="btn-contact" onclick="contactSeller(\'' + esc(p.contact_wechat || '') + '\')">联系Ta</button></div>'
+    html += '</div>'
+    html += '<div class="detail-bar"><button class="btn-contact" onclick="contactSeller(\'' + esc(p.contact_wechat || '') + '\')">联系Ta</button>'
+    html += '<button class="btn-contact" style="background:#fff;color:#07c160;border:1px solid #07c160;margin-left:8px" onclick="openComments(\'product\', ' + p.id + ')">💬</button></div>'
     document.getElementById('detail-content').innerHTML = html
     showPage('detail')
   })
@@ -217,9 +219,50 @@ function viewArticle(id) {
     html += '<span class="article-cat-tag">' + a.category + '</span>'
     html += '<h1 class="article-h1">' + esc(a.title) + '</h1>'
     html += '<div class="article-time">' + fmt(a.created_at) + ' · ' + (a.view_count||0) + '阅读</div></div>'
-    html += '<div class="article-body">' + esc(a.content) + '</div></div>'
+    html += '<div class="article-body">' + esc(a.content) + '</div>'
+    html += '<div style="padding:16px"><button class="btn-submit" style="background:#fff;color:#07c160;border:1px solid #07c160" onclick="openComments(\'article\', ' + a.id + ')">💬 查看评论</button></div></div>'
     document.getElementById('article-detail-content').innerHTML = html
     showPage('article-detail')
+  })
+}
+
+// ========== 评论 ==========
+var commentTarget = { type: '', id: 0 }
+
+function openComments(type, id) {
+  commentTarget = { type: type, id: id }
+  document.getElementById('comment-modal').style.display = 'flex'
+  loadComments()
+}
+
+function loadComments() {
+  sb.from('comments').select('*').eq('target_type', commentTarget.type).eq('target_id', commentTarget.id).order('created_at', { ascending: false }).limit(50)
+    .then(function(res){
+      var comments = res.data || []
+      var html = ''
+      if (!comments.length) html = '<div style="text-align:center;padding:20px;color:#999">暂无评论，快来抢沙发</div>'
+      else comments.forEach(function(c){
+        html += '<div style="padding:10px 0;border-bottom:1px solid #f0f0f0">'
+        html += '<div style="font-size:13px;color:#999;margin-bottom:4px">' + esc(c.author_name) + ' · ' + fmt(c.created_at) + '</div>'
+        html += '<div style="font-size:15px;color:#333">' + esc(c.content) + '</div></div>'
+      })
+      document.getElementById('comment-list').innerHTML = html
+    })
+}
+
+function submitComment() {
+  var input = document.getElementById('comment-input')
+  var content = input.value.trim()
+  if (!content) return alert('请输入评论内容')
+  var user = JSON.parse(localStorage.getItem('ak_user')||'{}')
+  sb.from('comments').insert({
+    target_type: commentTarget.type, target_id: commentTarget.id,
+    author_name: user.nickName || '匿名用户', author_id: uid(),
+    content: content
+  }).then(function(res){
+    if (res.error) return alert('评论失败')
+    input.value = ''
+    loadComments()
   })
 }
 

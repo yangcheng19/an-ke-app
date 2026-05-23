@@ -92,6 +92,19 @@
   <div id="article-detail-content"></div>
 </div>
 
+<!-- ===== 评论弹窗 ===== -->
+<div class="modal-mask" id="comment-modal" style="display:none">
+  <div class="modal-box" style="max-height:80vh;overflow-y:auto">
+    <div class="modal-title">评论</div>
+    <div id="comment-list" style="margin-bottom:16px"></div>
+    <div style="display:flex;gap:8px">
+      <input class="form-input" id="comment-input" placeholder="写评论..." style="flex:1">
+      <button class="btn-submit" onclick="submitComment()" style="width:auto;margin:0;padding:14px 24px">发送</button>
+    </div>
+    <button class="modal-close" onclick="document.getElementById('comment-modal').style.display='none'">关闭</button>
+  </div>
+</div>
+
 <!-- ===== 我的 ===== -->
 <div class="page" id="page-mine">
   <div class="user-card">
