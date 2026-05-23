@@ -62,11 +62,15 @@ function renderArticleCatBar() {
   document.getElementById('cat-bar-articles').innerHTML = html
 }
 
+var productCache = { data: null, time: 0 }
 function fetchProducts() {
+  var now = Date.now()
+  if (productCache.data && now - productCache.time < 30000) { renderProducts(productCache.data); return }
   document.getElementById('product-list').innerHTML = '<div class="empty-tip"><span class="empty-icon">⏳</span>加载中...</div>'
-  var query = sb.from('products').select('*').eq('status', 'active').order('created_at', { ascending: false }).limit(50)
-  if (homeCategory !== '全部') query = query.eq('category', homeCategory)
-  query.then(function(res){ renderProducts(res.data || []) })
+  sb.from('products').select('id,title,price,category,images,status,created_at,view_count').eq('status', 'active').order('created_at', { ascending: false }).limit(12).then(function(res){
+    productCache = { data: res.data || [], time: now }
+    renderProducts(res.data || [])
+  })
 }
 
 function renderProducts(products) {
@@ -88,11 +92,15 @@ function renderProducts(products) {
   document.getElementById('product-list').innerHTML = html
 }
 
+var articleCache = { data: null, time: 0 }
 function fetchArticles() {
+  var now = Date.now()
+  if (articleCache.data && now - articleCache.time < 30000) { renderArticles(articleCache.data); return }
   document.getElementById('product-list').innerHTML = '<div class="empty-tip"><span class="empty-icon">⏳</span>加载中...</div>'
-  var query = sb.from('articles').select('*').order('created_at', { ascending: false }).limit(50)
-  if (homeArticleCategory !== '全部') query = query.eq('category', homeArticleCategory)
-  query.then(function(res){ renderArticles(res.data || []) })
+  sb.from('articles').select('id,title,content,category,created_at,view_count').order('created_at', { ascending: false }).limit(12).then(function(res){
+    articleCache = { data: res.data || [], time: now }
+    renderArticles(res.data || [])
+  })
 }
 
 function renderArticles(articles) {
