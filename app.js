@@ -325,6 +325,9 @@ function loadMy() {
     document.getElementById('my-articles').innerHTML = aHtml ? '<div class="section-label">文案</div>' + aHtml : ''
     document.getElementById('my-empty').style.display = (!myProducts.length && !myArticles.length) ? '' : 'none'
     document.getElementById('stat-all').innerText = myProducts.length + myArticles.length
+  }).catch(function(err){
+    console.error('loadMy error:', err)
+    document.getElementById('my-empty').innerHTML = '<div class="empty-tip"><span class="empty-icon">📡</span>加载失败，下拉刷新重试</div>'
   })
 }
 
