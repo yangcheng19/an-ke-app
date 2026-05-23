@@ -187,8 +187,17 @@ function sb(u, o){ o=o||{}; o.headers=Object.assign({},SH,o.headers||{}); return
 function $(id){ return document.getElementById(id) }
 function esc(s){ if(!s)return''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
 function fmt(s){ if(!s)return''; var d=new Date(s),n=Date.now(),x=n-d; if(x<6e4)return'刚刚'; if(x<36e5)return Math.floor(x/6e4)+'分钟前'; if(x<864e5)return Math.floor(x/36e5)+'小时前'; if(x<2592e6)return Math.floor(x/864e5)+'天前'; return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate() }
-function uid(){ var id=localStorage.getItem('au'); if(!id){ id='u'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); localStorage.setItem('au',id) } return id }
+function uid(){ var id=localStorage.getItem('au'); if(!id) return null; return id }
 function usr(){ return JSON.parse(localStorage.getItem('ausr')||'{}') }
+function needLogin(){ return !uid() }
+function doLogin(phrase){
+  phrase = phrase.trim()
+  if(phrase.length<2) return alert('暗号至少2个字')
+  var id = 'ak_' + phrase.replace(/[^a-zA-Z0-9一-鿿]/g,'').slice(0,20)
+  localStorage.setItem('au', id)
+  if(!localStorage.getItem('ausr')) localStorage.setItem('ausr', JSON.stringify({nickName:phrase}))
+  ldMy()
+}
 
 function nav(name){
   document.querySelectorAll('.pg').forEach(function(p){ p.classList.remove('on') })
@@ -273,6 +282,7 @@ function rImgs(){
   $('imgs').innerHTML=h
 }
 function pubP(){
+  if(needLogin()) return alert('请先去"我的"页面设置暗号')
   var tl=$('f-ptl').value.trim(), ds=$('f-pds').value.trim(), pr=parseFloat($('f-ppr').value), ca=$('f-pca').value, wx=$('f-pwx').value.trim()
   if(!pimg.length) return alert('请上传物品图片')
   if(!tl) return alert('请输入标题')
@@ -289,6 +299,7 @@ function pubP(){
 
 // ===== 发布文案 =====
 function pubA(){
+  if(needLogin()) return alert('请先去"我的"页面设置暗号')
   var tl=$('f-atl').value.trim(), ct=$('f-act').value.trim(), ca=$('f-aca').value
   if(!tl) return alert('请输入标题'); if(!ct) return alert('请输入内容')
   var u=usr()
@@ -336,6 +347,7 @@ function ldCm(){
   }).catch(function(){ $('cml').innerHTML='<div style="text-align:center;padding:20px;color:#999">加载失败</div>' })
 }
 function pubC(){
+  if(needLogin()) return alert('请先去"我的"页面设置暗号')
   var v=$('cmin').value.trim(); if(!v) return alert('请输入评论内容')
   var u=usr()
   sb('comments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({target_type:ctg.t,target_id:ctg.id,author_name:u.nickName||'匿名用户',author_id:uid(),content:v})})
@@ -344,7 +356,14 @@ function pubC(){
 
 // ===== 我的 =====
 function ldMy(){
-  $('my-em').innerHTML='<div class="empt"><span class="eic">⏳</span>加载中...</div>'; $('mpd').innerHTML=''; $('mad').innerHTML=''
+  $('mpd').innerHTML=''; $('mad').innerHTML=''
+  if(needLogin()){
+    $('my-em').innerHTML='<div class="empt"><span class="eic">🔑</span><div style="margin:10px 0">设置你的暗号，以后用它找回发布</div><div style="display:flex;gap:8px;justify-content:center"><input class="fin" id="lgin" placeholder="输入暗号（至少2字）" style="width:200px;border:1px solid #ddd;border-radius:8px;padding:10px"><button class="btn" onclick="doLogin($(\'lgin\').value)" style="width:auto;margin:0;padding:10px 20px">确认</button></div></div>'
+    $('my-em').style.display=''
+    return
+  }
+  $('my-em').innerHTML='<div class="empt"><span class="eic">⏳</span>加载中...</div>'
+  $('my-em').style.display=''
   var myId=uid(), u=usr()
   var av=$('myav'); if(av) av.src=u.avatarUrl||''
   $('myna').innerText=u.nickName||'点击设置昵称'
