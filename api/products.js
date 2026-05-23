@@ -1,38 +1,33 @@
-var SUPABASE_URL = 'https://hwxskrvzyzklqhtbljjj.supabase.co'
-var SUPABASE_KEY = 'sb_publishable_Z532VBTIfq0yBj4K3f26-g_S81ro8kz'
-var H = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+export const config = { runtime: 'edge' }
 
-async function sb(path, opts) {
-  var url = SUPABASE_URL + '/rest/v1/' + path
-  var res = await fetch(url, Object.assign({ headers: H }, opts || {}))
-  return res.json()
-}
+var SB = 'https://hwxskrvzyzklqhtbljjj.supabase.co/rest/v1/products'
+var KEY = 'sb_publishable_Z532VBTIfq0yBj4K3f26-g_S81ro8kz'
+var H = { 'Content-Type':'application/json', apikey:KEY, Authorization:'Bearer '+KEY }
 
-module.exports = async function(req, res) {
+export default async function handler(req) {
   try {
-    if (req.method === 'GET') {
-      var q = req.query || {}
-      var select = q.select || '*'
-      var parts = ['select=' + select]
-      for (var k in q) {
-        if (k === 'select') continue
-        parts.push(k + '=' + q[k])
-      }
-      var data = await sb('products?' + parts.join('&'))
-      return res.json(data)
+    var u = new URL(req.url)
+    var m = req.method
+
+    if (m === 'GET') {
+      var qs = u.search || '?select=*'
+      var r = await fetch(SB + qs, { headers: H })
+      return new Response(JSON.stringify(await r.json()), { headers: H })
     }
-    if (req.method === 'POST') {
-      var data = await sb('products', { method: 'POST', body: JSON.stringify(req.body) })
-      return res.json(data)
+    if (m === 'POST') {
+      var b = await req.json()
+      b.created_at = new Date().toISOString()
+      var r = await fetch(SB, { method:'POST', headers:{...H,Prefer:'return=representation'}, body:JSON.stringify(b) })
+      return new Response(JSON.stringify(await r.json()), { headers: H })
     }
-    if (req.method === 'PATCH') {
-      var id = req.query.id
-      var qs = id ? 'products?id=eq.' + encodeURIComponent(id) : 'products'
-      var data = await sb(qs, { method: 'PATCH', body: JSON.stringify(req.body) })
-      return res.json(data)
+    if (m === 'PATCH') {
+      var id = u.searchParams.get('id')
+      var b2 = await req.json()
+      var r = await fetch(SB + '?id=eq.' + encodeURIComponent(id), { method:'PATCH', headers:{...H,Prefer:'return=representation'}, body:JSON.stringify(b2) })
+      return new Response(JSON.stringify(await r.json()), { headers: H })
     }
-    res.status(405).json({})
+    return new Response('[]', { headers: H })
   } catch(e) {
-    res.status(500).json({ error: e.message })
+    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: H })
   }
 }

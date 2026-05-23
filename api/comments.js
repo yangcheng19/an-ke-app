@@ -1,28 +1,27 @@
-var SUPABASE_URL = 'https://hwxskrvzyzklqhtbljjj.supabase.co'
-var SUPABASE_KEY = 'sb_publishable_Z532VBTIfq0yBj4K3f26-g_S81ro8kz'
-var H = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+export const config = { runtime: 'edge' }
 
-async function sb(path, opts) {
-  var url = SUPABASE_URL + '/rest/v1/' + path
-  var res = await fetch(url, Object.assign({ headers: H }, opts || {}))
-  return res.json()
-}
+var SB = 'https://hwxskrvzyzklqhtbljjj.supabase.co/rest/v1/comments'
+var KEY = 'sb_publishable_Z532VBTIfq0yBj4K3f26-g_S81ro8kz'
+var H = { 'Content-Type':'application/json', apikey:KEY, Authorization:'Bearer '+KEY }
 
-module.exports = async function(req, res) {
+export default async function handler(req) {
   try {
-    if (req.method === 'GET') {
-      var tt = req.query.target_type
-      var ti = req.query.target_id
-      var path = 'comments?select=*&target_type=eq.' + encodeURIComponent(tt) + '&target_id=eq.' + encodeURIComponent(ti) + '&order=created_at.desc&limit=50'
-      var data = await sb(path)
-      return res.json(data)
+    var u = new URL(req.url)
+    var m = req.method
+
+    if (m === 'GET') {
+      var qs = u.search || '?select=*'
+      var r = await fetch(SB + qs, { headers: H })
+      return new Response(JSON.stringify(await r.json()), { headers: H })
     }
-    if (req.method === 'POST') {
-      var data = await sb('comments', { method: 'POST', body: JSON.stringify(req.body) })
-      return res.json(data)
+    if (m === 'POST') {
+      var b = await req.json()
+      b.created_at = new Date().toISOString()
+      var r = await fetch(SB, { method:'POST', headers:{...H,Prefer:'return=representation'}, body:JSON.stringify(b) })
+      return new Response(JSON.stringify(await r.json()), { headers: H })
     }
-    res.status(405).json({})
+    return new Response('[]', { headers: H })
   } catch(e) {
-    res.status(500).json({ error: e.message })
+    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: H })
   }
 }
