@@ -120,9 +120,15 @@ function showPublishProduct() { showPage('publish-product') }
 
 function addProductImage(input) {
   var file = input.files[0]; if (!file) return
-  var reader = new FileReader()
-  reader.onload = function(e) { productImages.push(e.target.result); renderProductImages() }
-  reader.readAsDataURL(file); input.value = ''
+  document.getElementById('product-images-preview').innerHTML = '<div class="img-item" style="display:flex;align-items:center;justify-content:center;color:#999">⏳</div>'
+  var path = 'images/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + (file.name.split('.').pop() || 'jpg')
+  sb.storage.from('images').upload(path, file).then(function(res){
+    if (res.error) { alert('上传失败: ' + res.error.message); input.value = ''; return }
+    var url = SUPABASE_URL + '/storage/v1/object/public/' + path
+    productImages.push(url)
+    renderProductImages()
+    input.value = ''
+  })
 }
 
 function renderProductImages() {
