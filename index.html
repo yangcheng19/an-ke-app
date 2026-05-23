@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>安科展览会</title>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="安科展览会">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 头部 -->
+<div class="header">安科展览会</div>
+
+<!-- ===== 首页 ===== -->
+<div class="page active" id="page-home">
+  <div class="privacy-bar" id="privacy-bar">
+    <span>使用前请阅读<a href="#" onclick="alert('用户服务协议：本平台为展示分享平台，禁止发布违法内容。')">《用户协议》</a>和<a href="#" onclick="alert('隐私政策：我们仅收集您主动填写的昵称和联系方式，数据仅用于展示目的。')">《隐私政策》</a></span>
+    <button class="privacy-btn" onclick="document.getElementById('privacy-bar').style.display='none'">知道了</button>
+  </div>
+  <div class="mode-switch">
+    <div class="mode-item active" data-mode="products" onclick="switchMode('products')">📦 物品</div>
+    <div class="mode-item" data-mode="articles" onclick="switchMode('articles')">📝 文案</div>
+  </div>
+  <div class="cat-bar" id="cat-bar-products"></div>
+  <div class="cat-bar" id="cat-bar-articles" style="display:none"></div>
+  <div id="product-list"></div>
+</div>
+
+<!-- ===== 发布选择 ===== -->
+<div class="page" id="page-choice">
+  <div class="choice-page">
+    <div class="choice-card" onclick="showPublishProduct()">
+      <span class="choice-icon">📦</span>
+      <div><div class="choice-label">展示物品</div><div class="choice-desc">拍照上传，所见即所得</div></div>
+    </div>
+    <div class="choice-card" onclick="showPublishArticle()">
+      <span class="choice-icon">📝</span>
+      <div><div class="choice-label">展示文案</div><div class="choice-desc">吃瓜爆料、师说生语，写你想写</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 发布物品 ===== -->
+<div class="page" id="page-publish-product">
+  <div class="form-section">
+    <div class="form-label">物品图片（最多9张）</div>
+    <div class="img-grid" id="product-images-preview"><label class="img-add"><span>+</span><input type="file" accept="image/*" onchange="addProductImage(this)" hidden></label></div>
+  </div>
+  <div class="form-section">
+    <div class="form-label">物品信息</div>
+    <input class="form-input" id="prod-title" placeholder="物品标题（必填）" maxlength="60">
+    <textarea class="form-textarea" id="prod-desc" placeholder="描述物品细节..." maxlength="500"></textarea>
+    <input class="form-input" id="prod-price" type="number" placeholder="价值（单位：米粒）">
+  </div>
+  <div class="form-section">
+    <div class="form-label">分类</div>
+    <select id="prod-cat"><option>数码</option><option>服饰</option><option>家居</option><option>美妆</option><option>母婴</option><option>图书</option><option>运动</option><option>其他</option></select>
+  </div>
+  <div class="form-section">
+    <div class="form-label">联系方式</div>
+    <input class="form-input" id="prod-wechat" placeholder="微信号（必填）">
+  </div>
+  <button class="btn-submit" onclick="submitProduct()">分享好物</button>
+</div>
+
+<!-- ===== 发布文案 ===== -->
+<div class="page" id="page-publish-article">
+  <div class="form-section">
+    <div class="form-label">文案信息</div>
+    <input class="form-input" id="art-title" placeholder="标题（必填）" maxlength="60">
+    <textarea class="form-textarea" id="art-content" placeholder="写你想写..." maxlength="2000"></textarea>
+  </div>
+  <div class="form-section">
+    <div class="form-label">分类</div>
+    <select id="art-cat"><option>表白墙</option><option>吃瓜</option><option>师说生语</option><option>校园趣事</option><option>学习分享</option><option>寻物启事</option><option>吐槽</option><option>其他</option></select>
+  </div>
+  <button class="btn-submit" onclick="submitArticle()">发布文案</button>
+</div>
+
+<!-- ===== 物品详情 ===== -->
+<div class="page" id="page-detail">
+  <div id="detail-content"></div>
+</div>
+
+<!-- ===== 文案详情 ===== -->
+<div class="page" id="page-article-detail">
+  <div id="article-detail-content"></div>
+</div>
+
+<!-- ===== 我的 ===== -->
+<div class="page" id="page-mine">
+  <div class="user-card">
+    <img class="avatar-large" id="my-avatar" src="" onclick="setAvatar()" onerror="this.style.display='none'">
+    <div class="user-name" id="my-name" onclick="setNickname()">点击设置昵称</div>
+    <div style="font-size:12px;color:#ccc;margin-top:4px">点击头像和昵称修改</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><span class="stat-num" id="stat-all">0</span><span class="stat-label">分享</span></div>
+    <div class="stat"><span class="stat-num">0</span><span class="stat-label">收藏</span></div>
+  </div>
+  <div class="my-tabs">
+    <div class="my-tab active" data-mytab="all" onclick="switchMyTab('all')">我分享的</div>
+  </div>
+  <div id="my-products"></div>
+  <div id="my-articles"></div>
+  <div class="empty-tip" id="my-empty"><span class="empty-icon">📦</span>还没有分享任何内容</div>
+</div>
+
+<!-- ===== 联系弹窗 ===== -->
+<div class="modal-mask" id="contact-modal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title">联系Ta</div>
+    <div class="modal-row">微信号：<span id="modal-wechat" style="color:#333;font-weight:500"></span></div>
+    <button class="modal-close" onclick="document.getElementById('contact-modal').style.display='none'">关闭</button>
+  </div>
+</div>
+
+<!-- ===== 底部导航 ===== -->
+<div class="tab-bar">
+  <div class="tab-item active" data-page="home" onclick="showPage('home');switchMode(homeMode)">
+    <span class="tab-icon">🏠</span>首页
+  </div>
+  <div class="tab-item" data-page="choice" onclick="showPublishChoice()">
+    <span class="tab-icon">➕</span>分享
+  </div>
+  <div class="tab-item" data-page="mine" onclick="showPage('mine');loadMy()">
+    <span class="tab-icon">👤</span>我的
+  </div>
+</div>
+
+<!-- ===== 浮动狐狸 ===== -->
+<div class="float-fox" id="float-fox" style="left:330px;top:400px">🦊</div>
+<div class="fox-bubble" id="fox-bubble" style="display:none"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+}
+</script>
+</body>
+</html>
