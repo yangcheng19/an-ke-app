@@ -380,7 +380,7 @@ function initFox() {
   })
 
   function showFoxBubble() {
-    var msgs = ['点我一下试试','发现惊喜好物','随便看看呗','今天有什么新发现','听说魏老师只是刀子嘴豆腐心','这里的大家都是匿名，可以畅所欲言啦！']
+    var msgs = ['点我一下试试','一米粒=1rmb','随便看看呗','今天有什么新发现','听说魏老师只是刀子嘴豆腐心','这里的大家都是匿名，可以畅所欲言啦！']
     bubble.innerText = msgs[Math.floor(Math.random() * msgs.length)]
     bubble.style.display = ''
     if (fox.y < 80) { bubble.className = 'fox-bubble below'; bubble.style.top = (fox.y + 80) + 'px' }
