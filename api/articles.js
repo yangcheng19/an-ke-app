@@ -4,22 +4,22 @@ var H = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authoriza
 
 async function supabase(path, opts) {
   var url = SUPABASE_URL + '/rest/v1/' + path
-  var res = await fetch(url, { headers: H, ...opts })
+  var res = await fetch(url, Object.assign({ headers: H }, opts || {}))
   return { data: await res.json(), status: res.status }
 }
 
-export default async function handler(req) {
+module.exports = async function(req) {
   var url = new URL(req.url)
   var method = req.method
   try {
     if (method === 'GET') {
       var select = url.searchParams.get('select') || '*'
-      var queries = []
-      for (var [k, v] of url.searchParams) {
-        if (k === 'select') continue
-        queries.push(k + '=' + encodeURIComponent(v))
-      }
-      var path = 'articles?' + (['select=' + select].concat(queries)).join('&')
+      var parts = ['select=' + select]
+      url.searchParams.forEach(function(v, k) {
+        if (k === 'select') return
+        parts.push(k + '=' + v)
+      })
+      var path = 'articles?' + parts.join('&')
       var result = await supabase(path, { method: 'GET' })
       return new Response(JSON.stringify(result.data), { status: 200, headers: H })
     }
@@ -30,7 +30,7 @@ export default async function handler(req) {
     }
     if (method === 'DELETE') {
       var id = url.searchParams.get('id')
-      var result = await supabase('articles?id=eq.' + id, { method: 'DELETE' })
+      var result = await supabase('articles?id=eq.' + encodeURIComponent(id), { method: 'DELETE' })
       return new Response('{}', { status: 200, headers: H })
     }
     return new Response('{}', { status: 405, headers: H })

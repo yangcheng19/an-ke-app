@@ -4,22 +4,22 @@ var H = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authoriza
 
 async function supabase(path, opts) {
   var url = SUPABASE_URL + '/rest/v1/' + path
-  var res = await fetch(url, { headers: H, ...opts })
+  var res = await fetch(url, Object.assign({ headers: H }, opts || {}))
   return { data: await res.json(), status: res.status }
 }
 
-export default async function handler(req) {
+module.exports = async function(req) {
   var url = new URL(req.url)
   var method = req.method
   try {
     if (method === 'GET') {
       var select = url.searchParams.get('select') || '*'
-      var queries = []
-      for (var [k, v] of url.searchParams) {
-        if (k === 'select') continue
-        queries.push(k + '=' + encodeURIComponent(v.replace(/eq\.|lt\.|gt\.|order\.|ascending\.|descending\./g, function(m){ return m.replace('.','') })))
-      }
-      var path = 'products?' + (['select=' + select].concat(queries)).join('&')
+      var parts = ['select=' + select]
+      url.searchParams.forEach(function(v, k) {
+        if (k === 'select') return
+        parts.push(k + '=' + v)
+      })
+      var path = 'products?' + parts.join('&')
       var result = await supabase(path, { method: 'GET' })
       return new Response(JSON.stringify(result.data), { status: 200, headers: H })
     }
@@ -29,10 +29,10 @@ export default async function handler(req) {
       return new Response(JSON.stringify(result.data), { status: 200, headers: H })
     }
     if (method === 'PATCH') {
-      var id = url.searchParams.get('id')
-      if (id) url.searchParams.set('id', 'eq.' + id)
       var body2 = await req.json()
-      var result = await supabase('products?' + new URLSearchParams(url.searchParams).toString(), { method: 'PATCH', body: JSON.stringify(body2) })
+      var id = url.searchParams.get('id')
+      var q = id ? 'products?id=eq.' + encodeURIComponent(id) : 'products'
+      var result = await supabase(q, { method: 'PATCH', body: JSON.stringify(body2) })
       return new Response(JSON.stringify(result.data), { status: 200, headers: H })
     }
     return new Response('{}', { status: 405, headers: H })

@@ -4,18 +4,18 @@ var H = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authoriza
 
 async function supabase(path, opts) {
   var url = SUPABASE_URL + '/rest/v1/' + path
-  var res = await fetch(url, { headers: H, ...opts })
+  var res = await fetch(url, Object.assign({ headers: H }, opts || {}))
   return { data: await res.json(), status: res.status }
 }
 
-export default async function handler(req) {
+module.exports = async function(req) {
   var url = new URL(req.url)
   var method = req.method
   try {
     if (method === 'GET') {
-      var target_type = url.searchParams.get('target_type')
-      var target_id = url.searchParams.get('target_id')
-      var path = 'comments?select=*&target_type=eq.' + target_type + '&target_id=eq.' + target_id + '&order=created_at.desc&limit=50'
+      var tt = url.searchParams.get('target_type')
+      var ti = url.searchParams.get('target_id')
+      var path = 'comments?select=*&target_type=eq.' + encodeURIComponent(tt) + '&target_id=eq.' + encodeURIComponent(ti) + '&order=created_at.desc&limit=50'
       var result = await supabase(path, { method: 'GET' })
       return new Response(JSON.stringify(result.data), { status: 200, headers: H })
     }
