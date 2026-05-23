@@ -185,6 +185,7 @@ var SK = 'sb_publishable_Z532VBTIfq0yBj4K3f26-g_S81ro8kz'
 var SH = { 'Content-Type':'application/json', apikey:SK, Authorization:'Bearer '+SK, Prefer:'return=representation' }
 function sb(u, o){ o=o||{}; o.headers=Object.assign({},SH,o.headers||{}); return fetch(SB+u, o) }
 function $(id){ return document.getElementById(id) }
+function px(u){ return '/api/img?url='+encodeURIComponent(u) }
 function esc(s){ if(!s)return''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
 function fmt(s){ if(!s)return''; var d=new Date(s),n=Date.now(),x=n-d; if(x<6e4)return'刚刚'; if(x<36e5)return Math.floor(x/6e4)+'分钟前'; if(x<864e5)return Math.floor(x/36e5)+'小时前'; if(x<2592e6)return Math.floor(x/864e5)+'天前'; return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate() }
 function uid(){ var id=localStorage.getItem('au'); if(!id||id.indexOf('ak_')!==0) return null; return id }
@@ -243,7 +244,7 @@ function rP(list){
   if(!list.length){ $('list').innerHTML='<div class="empt"><span class="eic">📦</span>还没有物品</div>'; return }
   var h=''; list.forEach(function(p){
     var im=typeof p.images==='string'?JSON.parse(p.images||'[]'):(p.images||[])
-    h+='<div class="card" onclick="vP('+p.id+')">'+(im.length?'<img class="card-img" src="'+im[0]+'">':'<div class="card-img"></div>')+'<div class="card-info"><div class="card-title">'+esc(p.title)+'</div><div class="card-price">'+(p.price||0)+'</div></div></div>'
+    h+='<div class="card" onclick="vP('+p.id+')">'+(im.length?'<img class="card-img" src="'+px(im[0])+'">':'<div class="card-img"></div>')+'<div class="card-info"><div class="card-title">'+esc(p.title)+'</div><div class="card-price">'+(p.price||0)+'</div></div></div>'
   })
   $('list').innerHTML=h
 }
@@ -270,11 +271,25 @@ function sPage(n){ nav(n); $('pg-'+n).classList.add('on') }
 function addImg(inp){
   var f=inp.files[0]; if(!f) return
   $('imgs').innerHTML='<div class="iit" style="display:flex;align-items:center;justify-content:center;color:#999">⏳</div>'
-  var pth=Date.now()+'_'+Math.random().toString(36).slice(2,8)+'.'+(f.name.split('.').pop()||'jpg')
-  var form=new FormData(); form.append('',f)
-  fetch('https://hwxskrvzyzklqhtbljjj.supabase.co/storage/v1/object/images/'+pth,{method:'POST',body:f,headers:{Authorization:'Bearer sb_publishable_Z532VBTIfq0yBj4K3f26-g_S81ro8kz',apikey:'sb_publishable_Z532VBTIfq0yBj4K3f26-g_S81ro8kz'}})
-    .then(function(r){ if(!r.ok) throw new Error('fail'); pimg.push('https://hwxskrvzyzklqhtbljjj.supabase.co/storage/v1/object/public/images/'+pth); rImgs(); inp.value='' })
-    .catch(function(){ alert('上传失败'); inp.value=''; rImgs() })
+
+  // 用 canvas 压缩: max 500px 宽, webp q=0.7
+  var img = new Image()
+  var url = URL.createObjectURL(f)
+  img.onload = function(){
+    URL.revokeObjectURL(url)
+    var w=img.width, h=img.height, maxW=500
+    if(w>maxW){ h=h*maxW/w; w=maxW }
+    var c=document.createElement('canvas'); c.width=w; c.height=h
+    var ctx=c.getContext('2d'); ctx.drawImage(img,0,0,w,h)
+    c.toBlob(function(blob){
+      if(!blob){ alert('压缩失败'); inp.value=''; rImgs(); return }
+      var pth=Date.now()+'_'+Math.random().toString(36).slice(2,8)+'.webp'
+      fetch('https://hwxskrvzyzklqhtbljjj.supabase.co/storage/v1/object/images/'+pth,{method:'POST',body:blob,headers:{Authorization:'Bearer sb_publishable_Z532VBTIfq0yBj4K3f26-g_S81ro8kz',apikey:'sb_publishable_Z532VBTIfq0yBj4K3f26-g_S81ro8kz','Content-Type':'image/webp'}})
+        .then(function(r){ if(!r.ok) throw new Error('fail'); pimg.push('https://hwxskrvzyzklqhtbljjj.supabase.co/storage/v1/object/public/images/'+pth); rImgs(); inp.value='' })
+        .catch(function(){ alert('上传失败'); inp.value=''; rImgs() })
+    }, 'image/webp', 0.7)
+  }
+  img.src = url
 }
 function rImgs(){
   var h=''; pimg.forEach(function(u,i){ h+='<div style="position:relative"><img class="iit" src="'+u+'"><span class="idx" onclick="pimg.splice('+i+',1);rImgs()">✕</span></div>' })
@@ -315,7 +330,7 @@ function vP(id){
     var p=d&&d[0]; if(!p) return
     sb('products?id='+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({view_count:(p.view_count||0)+1})})
     var im=typeof p.images==='string'?JSON.parse(p.images||'[]'):(p.images||[])
-    var h=im.length?'<div class="dimg"><img src="'+im[0]+'"></div>':''
+    var h=im.length?'<div class="dimg"><img src="'+px(im[0])+'"></div>':''
     h+='<div class="dinfo"><div class="dpr">'+(p.price||0)+'米粒</div><div class="dtl">'+esc(p.title)+'</div><div class="dmt">'+fmt(p.created_at)+' · '+(p.view_count||0)+'次浏览 · '+p.category+'</div></div>'
     h+='<div class="dsl"><div class="sav"></div><div><div class="snm">'+esc(p.seller_name||'微信用户')+'</div><div class="slb">分享者</div></div></div>'
     h+='<div class="dds">'+esc(p.description||'暂无描述')+'</div>'
@@ -375,7 +390,7 @@ function ldMy(){
     var mp=r[0]||[], ma=r[1]||[], ph='', ah=''
     mp.forEach(function(p){
       var im=typeof p.images==='string'?JSON.parse(p.images||'[]'):(p.images||[])
-      ph+='<div class="mrow">'+(im.length?'<img class="mimg" src="'+im[0]+'">':'<div class="mimg"></div>')+'<div class="minf"><div class="mttl">'+esc(p.title)+'</div><div class="msts"><span class="s'+(p.status==='active'?'a':p.status==='sold'?'o':'r')+'">'+(p.status==='active'?'展示中':p.status==='sold'?'已出手':'已下架')+'</span></div></div>'
+      ph+='<div class="mrow">'+(im.length?'<img class="mimg" src="'+px(im[0])+'">':'<div class="mimg"></div>')+'<div class="minf"><div class="mttl">'+esc(p.title)+'</div><div class="msts"><span class="s'+(p.status==='active'?'a':p.status==='sold'?'o':'r')+'">'+(p.status==='active'?'展示中':p.status==='sold'?'已出手':'已下架')+'</span></div></div>'
       if(p.status==='active') ph+='<span class="mdel" onclick="rmP('+p.id+')">下架</span>'
       ph+='</div>'
     })
