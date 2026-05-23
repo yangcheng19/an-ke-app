@@ -182,7 +182,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <script>
 var SB = 'https://hwxskrvzyzklqhtbljjj.supabase.co/rest/v1'
 var SK = 'sb_publishable_Z532VBTIfq0yBj4K3f26-g_S81ro8kz'
-var SH = { 'Content-Type':'application/json', apikey:SK, Authorization:'Bearer '+SK }
+var SH = { 'Content-Type':'application/json', apikey:SK, Authorization:'Bearer '+SK, Prefer:'return=representation' }
 function sb(u, o){ o=o||{}; o.headers=Object.assign({},SH,o.headers||{}); return fetch(SB+u, o) }
 function $(id){ return document.getElementById(id) }
 function esc(s){ if(!s)return''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
