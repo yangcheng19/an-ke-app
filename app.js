@@ -260,7 +260,7 @@ function submitComment() {
     author_name: user.nickName || '匿名用户', author_id: uid(),
     content: content
   }).then(function(res){
-    if (res.error) return alert('评论失败')
+    if (res.error) return alert('评论失败: ' + res.error.message)
     input.value = ''
     loadComments()
   })
